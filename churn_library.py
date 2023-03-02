@@ -34,10 +34,9 @@ def import_data(path):
     input:
         path: a path to the csv
     output:
-        dtf: pandas dataframe
+        _: pandas dataframe
     '''
-    dtf = pd.read_csv(path)
-    return dtf
+    return pd.read_csv(path)
 
 
 def perform_eda(dtf):
@@ -63,6 +62,10 @@ def perform_eda(dtf):
         ('Total_Trans_Ct', 'Total_trans_Ct_plot.png'),
         ('Heatmap', 'Heatmap.png')]
 
+    # Create output folder if it doesen't exist
+    if not os.path.exists(OUTPUT_PATH):
+        os.mkdir(OUTPUT_PATH)
+
     # Generate the plots and save them
     for plot in plots:
         plt.figure(figsize=(20, 10))
@@ -70,8 +73,11 @@ def perform_eda(dtf):
             sns.heatmap(dtf.corr(), annot=False, cmap='Dark2_r', linewidths=2)
         elif plot[0] == 'Marital_Status':
             dtf[plot[0]].value_counts('normalize').plot(kind='bar')
+        elif plot[0] == 'Total_Trans_Ct':
+            sns.histplot(dtf[plot[0]], stat='density', kde=True)
         else:
             dtf[plot[0]].hist()
+
         plt.savefig(OUTPUT_PATH + plot[1])
         plt.close('all')
 
@@ -110,6 +116,8 @@ def encoder_helper(dataframe, category_lst, response):
 
 def perform_feature_engineering(dtf, response):
     '''
+    Arrange input data for the training
+
     input:
         dtf: pandas dataframe
         response: string of response name [optional argument that could be
@@ -121,12 +129,13 @@ def perform_feature_engineering(dtf, response):
         y_train: y training data
         y_test: y testing data
     '''
+    # Get list of numerical columns
     quant_columns = list(dtf.iloc[:, 4:].select_dtypes(
         include=['int64', 'float64']).columns)
 
     # Check if "response" is a valid list
     if len(quant_columns) != len(response):
-        # logging "Columns get their default name"
+        # Columns get their default name
         response = quant_columns
 
     # Define X and y with new names defined in "response"
@@ -252,9 +261,14 @@ def train_models(x_train, y_train):
 
     lrc.fit(x_train, y_train)
 
+    # Create models folder if it doesen't exist
+    out_path = r"./models/"
+    if not os.path.exists(out_path):
+        os.mkdir(out_path)
+
     # Save best models
-    joblib.dump(cv_rfc.best_estimator_, OUTPUT_PATH + 'rfc_model.pkl')
-    joblib.dump(lrc, OUTPUT_PATH + 'logistic_model.pkl')
+    joblib.dump(cv_rfc.best_estimator_, out_path + 'rfc_model.pkl')
+    joblib.dump(lrc, out_path + 'logistic_model.pkl')
 
 
 def save_results(x_train, x_test, y_train, y_test):
@@ -275,13 +289,8 @@ def save_results(x_train, x_test, y_train, y_test):
         './models/logistic_model.pkl')  # Logistic regression
 
     # Create output folder if it doesen't exist
-    output_path = r"./output"
-    if not os.path.exists(output_path):
-        try:
-            os.mkdir(output_path)
-            # logging f"The folder {output_path} was created successfully."
-        except OSError as error:
-            print(f"Failed to create the folder {output_path}. Error: {error}")
+    if not os.path.exists(OUTPUT_PATH):
+        os.mkdir(OUTPUT_PATH)
 
     # Do the report
     classification_report_image(y_train, y_test, x_train, x_test, models)
@@ -314,7 +323,7 @@ def save_results(x_train, x_test, y_train, y_test):
     img_plt.savefig(OUTPUT_PATH + "Importances.png")
 
 
-# Full DEA pipeline using the above functions
+# Full DEA pipeline example using the above functions
 if __name__ == "__main__":
 
     # Load data
