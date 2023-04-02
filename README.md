@@ -1,7 +1,5 @@
 # Predict Customer Churn
 
-Project **Predict Customer Churn** of ML DevOps Engineer Nanodegree Udacity
-
 ## Project Description
 The project consists of the application of the best programming practices from the point of view of joint programming with a team. Thus the project follows coding (PEP8) and engineering best practices for implementing software (modular, documented, and tested).
 
